@@ -4,41 +4,31 @@
     <meta charset="utf-8">
     <title>Birmensdorf Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        * { box-sizing: border-box; -webkit-box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background-color: #0c0c0e; color: #fff; width: 100vw; height: 100vh; overflow: hidden; padding: 10px; }
-        .container { display: -webkit-flex; display: flex; height: 100%; width: 100%; }
-        .left-panel { width: 35%; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 10px; }
-        .right-panel { width: 65%; padding-left: 10px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
-        .card { background-color: #1c1c1e; border-radius: 10px; padding: 10px; }
+        .container { display: -webkit-flex; display: flex; height: 100%; width: 100%; gap: 10px; }
+        .left-panel { width: 35%; display: -webkit-flex; display: flex; flex-direction: column; gap: 10px; }
+        .right-panel { width: 65%; display: -webkit-flex; flex-direction: column; }
+        .card { background-color: #1c1c1e; border-radius: 10px; padding: 15px; margin-bottom: 10px; }
 
-        /* Clock Solar Row */
-        .clock-row { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; align-items: center; padding: 10px; }
-        .solar-event { font-size: 14px; }
-        .solar-past { color: #8e8e93; }
-        .solar-next { color: #ff9f0a; font-weight: bold; }
+        .clock-row { display: -webkit-flex; justify-content: space-between; align-items: center; font-size: 16px; }
         .clock-time { font-size: 40px; font-weight: 300; }
-
-        /* Calendar & News */
-        .calendar-widget { padding: 8px; font-size: 13px; }
-        .calendar-grid { width: 100%; text-align: center; border-collapse: collapse; }
-        .calendar-grid td .today { background: #30d158; color: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-block; line-height: 22px; }
         
-        .news-widget { margin-top: 10px; }
-        .news-item { font-size: 13px; margin-bottom: 5px; }
-        .news-badge { font-size: 10px; color: #ff9f0a; text-transform: uppercase; margin-right: 5px; }
+        .calendar-widget { padding: 10px; }
+        .calendar-grid { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .calendar-grid td { padding: 5px; text-align: center; }
+        .today { background: #30d158; color: #000; border-radius: 50%; width: 25px; height: 25px; display: inline-block; line-height: 25px; }
 
-        /* Departures */
-        .departures-widget { -webkit-flex: 1; flex: 1; display: -webkit-flex; flex-direction: column; }
-        .departure-row { border-bottom: 1px solid #2c2c2e; padding: 8px 0; }
-        .delay-text { color: #ff453a; font-weight: bold; }
-        .alerts-container { margin-top: 10px; padding: 8px; border: 1px solid #ff453a; color: #ff453a; font-size: 12px; border-radius: 5px; }
+        .news-widget { font-size: 14px; }
+        .news-badge { color: #ff9f0a; font-weight: bold; margin-right: 5px; }
 
-        /* Mobile Responsive */
+        .departures-widget { flex: 1; overflow-y: auto; }
+        .departure-row { border-bottom: 1px solid #2c2c2e; padding: 10px 0; display: flex; justify-content: space-between; }
+        
         @media (max-width: 560px) {
             .left-panel { display: none; }
-            .right-panel { width: 100%; padding: 0; }
+            .right-panel { width: 100%; }
         }
     </style>
 </head>
@@ -46,33 +36,37 @@
     <div class="container">
         <div class="left-panel">
             <div class="card clock-row">
-                <div id="solar-past" class="solar-event solar-past">--:--</div>
+                <div id="solar-past">--:--</div>
                 <div id="clock" class="clock-time">00:00</div>
-                <div id="solar-next" class="solar-event solar-next">--:--</div>
+                <div id="solar-next">--:--</div>
             </div>
             <div class="card calendar-widget">
                 <table class="calendar-grid" id="calendar-body"></table>
             </div>
             <div class="card news-widget">
-                <div id="news-ticker" class="news-item">Cargando noticias...</div>
+                <div id="news-ticker"><span class="news-badge">[NOTICIAS]</span> Cargando...</div>
             </div>
         </div>
         <div class="right-panel">
-            <div class="card departures-widget">
-                <div id="departures-body"></div>
-                <div id="alerts-container" class="alerts-container" style="display:none;"></div>
+            <div class="card departures-widget" id="departures-body">
+                Cargando transporte...
             </div>
         </div>
     </div>
     <script>
-        // Placeholder scripts for logic: Clock, Solar, Weather, News, Transport
-        function updateAll() {
-            var now = new Date();
-            document.getElementById('clock').innerHTML = now.getHours() + ':' + ('0'+now.getMinutes()).slice(-2);
-            // Logic for solar, news rotation and transport would go here
+        function update() {
+            var n = new Date();
+            document.getElementById('clock').innerHTML = n.getHours() + ':' + ('0'+n.getMinutes()).slice(-2);
         }
-        setInterval(updateAll, 1000);
-        updateAll();
+        setInterval(update, 1000);
+        update();
+        
+        // Simulación de carga para que no esté vacía
+        function loadContent() {
+            document.getElementById('calendar-body').innerHTML = '<tr><td>1</td><td>2</td><td>3</td><td><span class="today">4</span></td></tr>';
+            document.getElementById('departures-body').innerHTML = '<div class="departure-row"><span>S9 a Zürich HB</span><span>en 5 min</span></div>';
+        }
+        loadContent();
     </script>
 </body>
 </html>
