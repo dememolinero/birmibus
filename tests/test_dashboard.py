@@ -463,5 +463,98 @@ class TestDataProcessing(unittest.TestCase):
         self.assertEqual(result, "--:--")
 
 
+# ============================================================
+# 6. CELESTIAL ARC TESTS
+# ============================================================
+class TestCelestialArc(unittest.TestCase):
+    """Validate celestial arc SVG structure and JS logic."""
+
+    @classmethod
+    def setUpClass(cls):
+        with open(os.path.join(BASE_DIR, "index.html"), "r") as f:
+            cls.html = f.read()
+        js_match = re.search(r"<script>(.*?)</script>", cls.html, re.DOTALL)
+        cls.js = js_match.group(1) if js_match else ""
+
+    def test_sky_arc_svg_exists(self):
+        """SVG element with class sky-arc must exist."""
+        self.assertIn("class=\"sky-arc\"", self.html)
+        self.assertIn("<svg", self.html)
+        self.assertIn("viewBox=\"0 0 200 65\"", self.html)
+
+    def test_sun_pos_circle_exists(self):
+        """Sun position circle must exist in SVG."""
+        self.assertIn("id=\"sun-pos\"", self.html)
+        self.assertIn("fill=\"#ff9f0a\"", self.html)
+
+    def test_moon_pos_group_exists(self):
+        """Moon position must be a <g> group (not a plain circle)."""
+        self.assertRegex(self.html, r"<g\s+id=\"moon-pos\"")
+
+    def test_moon_shadow_circle_exists(self):
+        """Moon shadow circle for phase rendering must exist."""
+        self.assertIn("id=\"moon-sh\"", self.html)
+        self.assertIn("fill=\"#0c0c0e\"", self.html)
+
+    def test_bezierPt_function_exists(self):
+        """bezierPt function must exist for arc positioning."""
+        self.assertIn("function bezierPt(", self.js)
+
+    def test_bezierPt_quadratic_formula(self):
+        """bezierPt must use quadratic Bezier formula with P0, P1, P2."""
+        self.assertIn("(1-t)*(1-t)*10", self.js)
+        self.assertIn("2*(1-t)*t*100", self.js)
+        self.assertIn("t*t*190", self.js)
+
+    def test_updateMoonPhase_function_exists(self):
+        """updateMoonPhase function must exist for lunar phase icons."""
+        self.assertIn("function updateMoonPhase(", self.js)
+
+    def test_moon_shadow_uses_cos(self):
+        """Moon shadow offset must use cos(phase*2*PI) for phase calculation."""
+        self.assertIn("Math.cos(phase*2*Math.PI)", self.js)
+
+    def test_moon_shadow_cx_set(self):
+        """Moon shadow cx must be set based on cos calculation."""
+        self.assertIn("moon-sh\"", self.js)
+        self.assertIn("cos*3.5", self.js)
+
+    def test_arc_hiding_logic(self):
+        """Arc must be hidden when neither sun nor moon visible."""
+        self.assertIn("sky-arc", self.js)
+        self.assertIn("sunVis", self.js)
+        self.assertIn("moonV", self.js)
+        self.assertIn("arcEl.setAttribute(\"display\"", self.js)
+
+    def test_arc_visibility_toggle(self):
+        """Arc display toggles based on sun/moon visibility."""
+        self.assertIn("(sunVis||moonV)", self.js)
+
+    def test_lunar_cycle_constant(self):
+        """Lunar synodic month constant (29.53059 days) must be defined."""
+        self.assertIn("29.53059", self.js)
+
+    def test_lunar_reference_new_moon(self):
+        """Reference new moon date (Jan 6, 2000) must be defined."""
+        self.assertIn("new Date(2000,0,6,18,14,0)", self.js)
+
+    def test_moon_age_calculation(self):
+        """Moon age must be calculated with double-modulo for cycle position."""
+        self.assertIn("moonAge", self.js)
+        self.assertIn("((daysSince%LUNAR)+LUNAR)%LUNAR", self.js)
+
+    def test_moon_visible_threshold(self):
+        """Moon visibility must exclude ~3 days around new moon."""
+        self.assertIn("moonAge>3&&moonAge<26", self.js)
+
+    def test_sky_arc_css_rule(self):
+        """CSS rule for .sky-arc must exist."""
+        self.assertIn(".sky-arc{", self.html)
+
+    def test_moon_phase_called_when_visible(self):
+        """updateMoonPhase must be called when moon is above horizon."""
+        self.assertIn("updateMoonPhase(moonPhase)", self.js)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
