@@ -10,7 +10,7 @@ Dashboard display on **iPad Mini 1st gen running iOS 9.3.5** via Safari. Must be
 - `apple-mobile-web-app-capable` meta tag enabled for fullscreen webapp mode
 
 ## Architecture
-- **Single file SPA:** `index.html` (~490 lines) — HTML + CSS + JS all embedded
+- **Single file SPA:** `index.html` (~600 lines) — HTML + CSS + JS all embedded
 - **No build tools, no frameworks, no dependencies**
 - **Data sources:** Open-Meteo (weather), Transport OpenData.ch (departures), RSS2JSON (news)
 
@@ -29,13 +29,15 @@ tests/test_dashboard.py — Python test suite
 │                     │                              │
 │ ┌─────────────────┐ │ ┌──────────────────────────┐ │
 │ │ Clock + Solar   │ │ │ Departures (SBB/Bus)     │ │
-│ │ (sunrise/sunset)│ │ │ Birmensdorf → Zürich     │ │
-│ └─────────────────┘ │ │                          │ │
-│ ┌─────────────────┐ │ │ Shows: line, dest, time, │ │
-│ │ Calendar        │ │ │ delay, alerts            │ │
+│ │ + celestial arc │ │ │ Birmensdorf → Zürich     │ │
+│ │ (sunrise/sunset)│ │ │ frequency + delay info   │ │
 │ └─────────────────┘ │ └──────────────────────────┘ │
 │ ┌─────────────────┐ │                              │
+│ │ Calendar        │ │                              │
+│ └─────────────────┘ │                              │
+│ ┌─────────────────┐ │                              │
 │ │ News (rotating) │ │                              │
+│ │ 20min + Marca   │ │                              │
 │ └─────────────────┘ │                              │
 │ ┌─────────────────┐ │                              │
 │ │ Weather         │ │                              │
@@ -62,11 +64,21 @@ Mobile: col-left hidden below 560px, col-right takes 100%.
 ## Key Functions Reference
 | Function | Purpose | Interval |
 |----------|---------|----------|
-| `updateClock()` | Clock + solar events | 1s |
+| `updateClock()` | Clock + solar events + arc visibility | 1s |
+| `bezierPt(t)` | Quadratic Bezier point for sky arc | — |
+| `updateMoonPhase(phase)` | Moon shadow circle for phase icon | — |
+| `fmtRemaining(m)` | Time format: "ahora" / "en X min" / "en X h Y min" | — |
 | `drawCalendar()` | Monthly calendar | Once on load |
 | `fetchWeather()` / `renderWeather()` | Weather data | Once on load |
-| `fetchDepartures()` / `renderDeps()` | Train/bus departures | 60s |
+| `fetchDepartures()` / `renderDeps()` | Train/bus departures + frequency calc | 60s |
 | `fetchNews()` / `rotateNews()` | RSS headlines | 900s (15min) |
+
+## Celestial Arc
+- SVG with quadratic Bezier curve from (10,60) through (100,-5) to (190,60)
+- Sun (orange circle) moves along arc during daylight, hidden at night
+- Moon (white circle with shadow) shows lunar phase via SVG shadow offset
+- Entire arc hidden when neither sun nor moon visible
+- Moon phase calculated from 29.53-day lunar cycle (reference new moon: Jan 6, 2000)
 
 ## Solar Data Structure
 ```javascript
@@ -75,7 +87,13 @@ solarData = [
     ...
 ]  // sorted chronologically
 ```
-Used by `updateClock()` to show most recent past event (left) and next upcoming event (right).
+Always shows: sunrise 🌅 (left), sunset 🌇 (right).
+
+## Departures: Frequency Calculation
+- For each line, calculate interval between first two visible departures
+- Round to nearest multiple of 5: `Math.round(interval/5)*5`
+- Display "(próximo en X min)" next to the line name
+- If next departure has delay, add it to the frequency
 
 ## Weather API
 ```
@@ -92,6 +110,10 @@ Note: `past_days=1` means daily[0]=yesterday, daily[1]=today, daily[2]=tomorrow.
 - Filter: Only connections to Zürich or Schlieren
 - Delay detection: yellow/red alerts when delay > 0
 
+## RSS Feeds (via RSS2JSON)
+- 20minutos (España/nacional): `https://www.20minutos.es/rss/`
+- Marca (Deportes): `https://e00-marca.uecdn.es/rss/portada.xml`
+
 ## WMO Weather Code → Emoji
 ```javascript
 var WMO={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
@@ -105,8 +127,10 @@ var WMO={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
 ## Branches
 - `main` — production
 - `feature/enhances` — first enhancement batch
-- `feature/enhances2` — second enhancement batch (current main dev)
+- `feature/enhances2` — second enhancement batch
 - `feature/enhances3` — third batch (clock arc, forecast fixes)
+- `feature/enhances4` — fourth batch (fmtRemaining, next departure, sunset color)
+- `feature/enhances5` — fifth batch (RTVE removed, arc hiding, moon phases, frequency fix)
 
 ## Testing
 - `python3 tests/test_dashboard.py` — unit tests for HTML structure, CSS, JS logic

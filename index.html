@@ -84,7 +84,7 @@
         .dep-remaining{color:#30d158}
         .dep-absolute{font-size:11px;color:#8e8e93;font-weight:400}
         .dep-delay{color:#ff453a;font-weight:700}
-        .dep-next{font-size:10px;color:#8e8e93;font-weight:400;margin-top:1px}
+        .dep-next{font-size:9px;color:#8e8e93;font-weight:400}
 
         /* ALERTS */
         .alert-box{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid}
@@ -116,7 +116,10 @@
                 <svg class="sky-arc" viewBox="0 0 200 65" id="sky-arc">
                     <path d="M10,60 Q100,-5 190,60" stroke="#3a3a3c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
                     <circle id="sun-pos" r="5" fill="#ff9f0a" display="none"/>
-                    <circle id="moon-pos" r="3.5" fill="#e5e5ea" display="none"/>
+                    <g id="moon-pos" display="none">
+                        <circle r="3.5" fill="#e5e5ea"/>
+                        <circle id="moon-sh" r="3.5" fill="#0c0c0e"/>
+                    </g>
                 </svg>
             </div>
             <div class="solar-item solar-next">
@@ -186,6 +189,12 @@
         var x=(1-t)*(1-t)*10+2*(1-t)*t*100+t*t*190;
         var y=(1-t)*(1-t)*60+2*(1-t)*t*(-5)+t*t*60;
         return{x:x,y:y};
+    }
+
+    function updateMoonPhase(phase){
+        var shadow=document.getElementById("moon-sh");
+        var cos=Math.cos(phase*2*Math.PI);
+        shadow.setAttribute("cx",cos*3.5);
     }
 
     function updateClock(){
@@ -270,12 +279,18 @@
                 moonEl.setAttribute("cx",mpt.x);
                 moonEl.setAttribute("cy",mpt.y);
                 moonEl.setAttribute("display","");
+                updateMoonPhase(moonPhase);
             } else {
                 moonEl.setAttribute("display","none");
             }
         } else {
             moonEl.setAttribute("display","none");
         }
+
+        var arcEl=document.getElementById("sky-arc");
+        var sunVis=sunEl.getAttribute("display")!=="none";
+        var moonV=moonEl.getAttribute("display")!=="none";
+        arcEl.setAttribute("display",(sunVis||moonV)?"":"none");
     }
     setInterval(updateClock,1000);
 
@@ -464,14 +479,19 @@
 
         var nowMs=Date.now(), html="", count=0, alertCount=0;
 
-        var nextByLine={};
+        var lineFirst={};
+        var lineFreq={};
         for(i=0;i<merged.length;i++){
             var mm=merged[i];
             var dMs=mm.ts*1000+((typeof mm.delay==="number")?mm.delay:0)*60000;
             var dRem=diffMin(dMs,nowMs);
             if(dRem<-1)continue;
-            if(!nextByLine[mm.name]){nextByLine[mm.name]=dRem}
-            else if(!nextByLine[mm.name+"_n"]){nextByLine[mm.name+"_n"]=dRem}
+            if(lineFirst[mm.name]==null){
+                lineFirst[mm.name]=dRem;
+            }else if(lineFreq[mm.name]==null){
+                var interval=dRem-lineFirst[mm.name];
+                lineFreq[mm.name]=Math.round(interval/5)*5;
+            }
         }
 
         for(i=0;i<merged.length&&count<10;i++){
@@ -486,16 +506,16 @@
             var remText=fmtRemaining(rem);
             var schedT=format24hISO(m.sDep);
 
-            var nextMin=nextByLine[m.name+"_n"];
-            var nextText="";
-            if(nextMin!=null){
-                var nf=fmtRemaining(nextMin).replace("en ","");
-                nextText="<div class='dep-next'>próximo en "+nf+"</div>";
+            var freq=lineFreq[m.name];
+            var freqText="";
+            if(freq!=null){
+                var nextDelay=(typeof m.delay==="number")?m.delay:0;
+                freqText=" <span class='dep-next'>("+fmtRemaining(freq+nextDelay).replace("en ","")+")</span>";
             }
 
             html+="<div class='dep-row'>";
-            html+="<div class='dep-line "+lc+"'>"+m.name+"</div>";
-            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+nextText+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
+            html+="<div class='dep-line "+lc+"'>"+m.name+freqText+"</div>";
+            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
             html+="<div class='dep-time'><span class='dep-remaining'>"+remText+"</span> <span class='dep-absolute'>("+schedT;
             if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
             html+=")</span></div></div>";
@@ -535,7 +555,6 @@
         newsItems=[];
         var feeds=[
             {url:"https://www.20minutos.es/rss/",badge:"España",cls:"badge-nacional"},
-            {url:"https://www.rtve.es/rss/deportes.xml",badge:"Deportes",cls:"badge-deportes"},
             {url:"https://e00-marca.uecdn.es/rss/portada.xml",badge:"Deportes",cls:"badge-deportes"}
         ];
         var loaded=0;

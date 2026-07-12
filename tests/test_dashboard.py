@@ -337,13 +337,6 @@ class TestAPIConnectivity(unittest.TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(data.get("status"), "ok")
 
-    def test_rss2json_rtve_deportes_reachable(self):
-        url = "https://api.rss2json.com/v1/api.json?rss_url=https://www.rtve.es/rss/deportes.xml"
-        status, data = api_get(url, timeout=15)
-        self.assertEqual(status, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(data.get("status"), "ok")
-
 
 # ============================================================
 # 5. DATA PROCESSING LOGIC TESTS
