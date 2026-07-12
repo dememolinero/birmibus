@@ -177,9 +177,9 @@
         if(m>=60){
             var h=Math.floor(m/60);
             var r=m%60;
-            return "en "+h+" h"+(r>0?" y "+r+" min":"");
+            return h+" h"+(r>0?" "+r+" min":"");
         }
-        return "en "+m+" min";
+        return m+" min";
     }
 
     /* ================= CLOCK + SOLAR ================= */
@@ -510,11 +510,11 @@
             var freqText="";
             if(freq!=null){
                 var nextDelay=(typeof m.delay==="number")?m.delay:0;
-                freqText=" <span class='dep-next'>("+fmtRemaining(freq+nextDelay).replace("en ","")+")</span>";
+                freqText=" <span class='dep-next'>(próximo en "+fmtRemaining(freq+nextDelay)+')</span>';
             }
 
             html+="<div class='dep-row'>";
-            html+="<div class='dep-line "+lc+"'>"+m.name+freqText+"</div>";
+            html+="<div class='dep-line "+lc+"'>"+m.name+"</div>"+freqText;
             html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
             html+="<div class='dep-time'><span class='dep-remaining'>"+remText+"</span> <span class='dep-absolute'>("+schedT;
             if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
@@ -554,8 +554,16 @@
     function fetchNews(){
         newsItems=[];
         var feeds=[
-            {url:"https://www.20minutos.es/rss/",badge:"España",cls:"badge-nacional"},
-            {url:"https://e00-marca.uecdn.es/rss/portada.xml",badge:"Deportes",cls:"badge-deportes"}
+            {url:"https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml",badge:"España",cls:"badge-nacional"},
+            {url:"https://e00-elmundo.uecdn.es/elmundo/rss/internacional.xml",badge:"Internacional",cls:"badge-internacional"},
+            {url:"https://www.abc.es/rss/2.0/espana/",badge:"España",cls:"badge-nacional"},
+            {url:"https://www.abc.es/rss/2.0/internacional/",badge:"Internacional",cls:"badge-internacional"},
+            {url:"https://e00-expansion.uecdn.es/rss/economia.xml",badge:"Economía",cls:"badge-economia"},
+            {url:"https://www.xataka.com/feedburner.xml",badge:"Tecnología",cls:"badge-tecnologia"},
+            {url:"https://www.abc.es/rss/2.0/ciencia/",badge:"Ciencia",cls:"badge-ciencia"},
+            {url:"https://www.abc.es/rss/2.0/tecnologia/",badge:"Tecnología",cls:"badge-tecnologia"},
+            {url:"https://e00-marca.uecdn.es/rss/portada.xml",badge:"Deportes",cls:"badge-deportes"},
+            {url:"https://e00-marca.uecdn.es/rss/futbol.xml",badge:"Fútbol",cls:"badge-deportes"}
         ];
         var loaded=0;
 
