@@ -514,8 +514,8 @@
             }
 
             html+="<div class='dep-row'>";
-            html+="<div class='dep-line "+lc+"'>"+m.name+"</div>"+freqText;
-            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
+            html+="<div class='dep-line "+lc+"'>"+m.name+"</div>";
+            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+freqText+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
             html+="<div class='dep-time'><span class='dep-remaining'>"+remText+"</span> <span class='dep-absolute'>("+schedT;
             if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
             html+=")</span></div></div>";
