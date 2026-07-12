@@ -19,7 +19,7 @@
         .solar-item{text-align:center;width:28%}
         .solar-time{font-size:16px;font-weight:600}
         .solar-past{color:#8e8e93}
-        .solar-next{color:#ff9f0a}
+        .solar-next{color:#8e8e93}
         .solar-icon{font-size:20px}
         .clock-center{text-align:center;width:44%}
         .clock-time{font-size:38px;font-weight:200;letter-spacing:3px}
@@ -84,6 +84,7 @@
         .dep-remaining{color:#30d158}
         .dep-absolute{font-size:11px;color:#8e8e93;font-weight:400}
         .dep-delay{color:#ff453a;font-weight:700}
+        .dep-next{font-size:10px;color:#8e8e93;font-weight:400;margin-top:1px}
 
         /* ALERTS */
         .alert-box{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid}
@@ -167,6 +168,16 @@
     function fmt24h(d){return pad(d.getHours())+":"+pad(d.getMinutes())}
 
     function diffMin(futureMs,pastMs){return Math.round((futureMs-pastMs)/60000)}
+
+    function fmtRemaining(m){
+        if(m<=0)return "ahora";
+        if(m>=60){
+            var h=Math.floor(m/60);
+            var r=m%60;
+            return "en "+h+" h"+(r>0?" y "+r+" min":"");
+        }
+        return "en "+m+" min";
+    }
 
     /* ================= CLOCK + SOLAR ================= */
     var solarData=[];
@@ -452,6 +463,17 @@
         merged.sort(function(a,b){return a.ts-b.ts});
 
         var nowMs=Date.now(), html="", count=0, alertCount=0;
+
+        var nextByLine={};
+        for(i=0;i<merged.length;i++){
+            var mm=merged[i];
+            var dMs=mm.ts*1000+((typeof mm.delay==="number")?mm.delay:0)*60000;
+            var dRem=diffMin(dMs,nowMs);
+            if(dRem<-1)continue;
+            if(!nextByLine[mm.name]){nextByLine[mm.name]=dRem}
+            else if(!nextByLine[mm.name+"_n"]){nextByLine[mm.name+"_n"]=dRem}
+        }
+
         for(i=0;i<merged.length&&count<10;i++){
             var m=merged[i];
             var delayMins=(typeof m.delay==="number")?m.delay:0;
@@ -461,12 +483,19 @@
             count++;
 
             var lc=m.type==="train"?"line-train":"line-bus";
-            var remText=rem<=0?"ahora":"en "+rem+" min";
+            var remText=fmtRemaining(rem);
             var schedT=format24hISO(m.sDep);
+
+            var nextMin=nextByLine[m.name+"_n"];
+            var nextText="";
+            if(nextMin!=null){
+                var nf=fmtRemaining(nextMin).replace("en ","");
+                nextText="<div class='dep-next'>próximo en "+nf+"</div>";
+            }
 
             html+="<div class='dep-row'>";
             html+="<div class='dep-line "+lc+"'>"+m.name+"</div>";
-            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
+            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+nextText+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
             html+="<div class='dep-time'><span class='dep-remaining'>"+remText+"</span> <span class='dep-absolute'>("+schedT;
             if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
             html+=")</span></div></div>";

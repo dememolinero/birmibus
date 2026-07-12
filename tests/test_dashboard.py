@@ -148,9 +148,9 @@ class TestCSS(unittest.TestCase):
         self.assertIn(".alert-danger", self.html)
         self.assertIn("@keyframes", self.html)
 
-    def test_solar_next_is_orange(self):
+    def test_solar_next_is_gray(self):
         self.assertIn(".solar-next", self.html)
-        self.assertIn("#ff9f0a", self.html)
+        self.assertIn(".solar-next{color:#8e8e93}", self.html)
 
 
 # ============================================================
@@ -175,6 +175,13 @@ class TestJavaScriptFunctions(unittest.TestCase):
 
     def test_diffMin_function_exists(self):
         self.assertIn("function diffMin(", self.js)
+
+    def test_fmtRemaining_function_exists(self):
+        self.assertIn("function fmtRemaining(", self.js)
+
+    def test_fmtRemaining_hours_format(self):
+        """Minutes >= 60 should show hours and minutes."""
+        self.assertIn('"en "+h+" h"', self.js)
 
     def test_goesToZurich_function_exists(self):
         self.assertIn("function shouldShowConnection(", self.js)
