@@ -1,881 +1,481 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8">
     <title>Birmensdorf Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        /* CSS RESET & GENERAL STYLES - COMPATIBLE WITH iOS 9 SAFARI (iPad Mini 1) */
-        * {
-            box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: #0c0c0e;
-            color: #ffffff;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            padding: 15px;
-        }
+        *{box-sizing:border-box;-webkit-box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;background:#0c0c0e;color:#fff;width:100vw;height:100vh;overflow:hidden;padding:10px}
+        .row{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-direction:normal;-webkit-flex-direction:row;flex-direction:row;width:100%;height:100%;gap:10px}
+        .col-left{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;width:35%;gap:8px}
+        .col-right{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;width:65%}
+        .card{background:#1c1c1e;border-radius:10px;padding:12px;border:1px solid #2c2c2e;overflow:hidden}
+        .flex-fill{-webkit-box-flex:1;-webkit-flex:1;flex:1}
 
-        /* FLEXBOX WITH WEBKIT PREFIXES FOR iOS 9 */
-        .container {
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: horizontal;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: row;
-            flex-direction: row;
-            width: 100%;
-            height: 100%;
-        }
+        /* CLOCK + SOLAR */
+        .clock-row{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
+        .solar-item{text-align:center;width:28%}
+        .solar-label{font-size:9px;color:#8e8e93;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+        .solar-time{font-size:16px;font-weight:600}
+        .solar-past{color:#8e8e93}
+        .solar-next{color:#ff9f0a}
+        .solar-icon{font-size:20px}
+        .clock-center{text-align:center;width:44%}
+        .clock-time{font-size:38px;font-weight:200;letter-spacing:3px}
+        .clock-date{font-size:10px;color:#8e8e93;margin-top:2px}
 
-        .left-panel {
-            width: 40%;
-            padding-right: 15px;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: vertical;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: column;
-            flex-direction: column;
-            -webkit-box-pack: justify;
-            -webkit-justify-content: space-between;
-            justify-content: space-between;
-            height: 100%;
-        }
+        /* CALENDAR */
+        .cal-widget{padding:8px}
+        .cal-title{text-align:center;font-size:13px;font-weight:700;color:#ff9f0a;margin-bottom:6px;text-transform:uppercase}
+        .cal-grid{width:100%;border-collapse:collapse;text-align:center}
+        .cal-grid th{font-size:10px;color:#8e8e93;font-weight:700;padding:2px 0;width:14.28%}
+        .cal-grid td{font-size:12px;padding:2px 0;color:#fff;height:22px}
+        .cal-grid .other{color:#3a3a3c}
+        .cal-grid .today{display:inline-block;width:22px;height:22px;line-height:22px;background:#30d158;color:#000;border-radius:50%;font-weight:700}
 
-        .right-panel {
-            width: 60%;
-            padding-left: 15px;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: vertical;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: column;
-            flex-direction: column;
-            height: 100%;
-        }
+        /* NEWS */
+        .news-widget{padding:10px;min-height:70px}
+        .news-title{font-size:10px;color:#8e8e93;font-weight:700;text-transform:uppercase;margin-bottom:6px;letter-spacing:1px}
+        .news-body{font-size:13px;line-height:1.4}
+        .news-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;margin-right:6px;text-transform:uppercase;vertical-align:middle}
+        .badge-nacional{background:#007aff;color:#fff}
+        .badge-deportes{background:#ff453a;color:#fff}
+        .news-link{color:#fff;text-decoration:none}
+        .news-link:hover{text-decoration:underline}
 
-        /* CARD STYLE */
-        .card {
-            background-color: #1c1c1e;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #2c2c2e;
-        }
-        .card:last-child {
-            margin-bottom: 0;
-        }
+        /* WEATHER */
+        .wx-widget{padding:10px}
+        .wx-title{font-size:10px;color:#8e8e93;font-weight:700;text-transform:uppercase;margin-bottom:6px;letter-spacing:1px}
+        .wx-grid{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-webkit-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:8px}
+        .wx-stat{text-align:center;width:24%}
+        .wx-stat-icon{font-size:16px}
+        .wx-stat-val{font-size:13px;font-weight:700}
+        .wx-stat-lbl{font-size:9px;color:#8e8e93}
+        .wx-hourly{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;border-bottom:1px solid #2c2c2e;padding-bottom:6px;margin-bottom:6px}
+        .wx-h{text-align:center;width:18%}
+        .wx-h-time{font-size:10px;color:#8e8e93}
+        .wx-h-icon{font-size:16px;margin:2px 0}
+        .wx-h-temp{font-size:12px;font-weight:700}
+        .wx-daily-item{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;align-items:center;padding:3px 0;font-size:12px}
+        .wx-d-day{width:30%;font-weight:700}
+        .wx-d-icon{width:30%;text-align:center;font-size:16px}
+        .wx-d-temp{text-align:right;width:40%}
+        .wx-max{color:#ff453a}
+        .wx-min{color:#0a84ff;margin-left:6px}
 
-        /* CLOCK WIDGET */
-        .clock-widget {
-            text-align: center;
-            padding: 10px;
-        }
-        .clock-time {
-            font-size: 64px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            color: #ffffff;
-            font-variant-numeric: tabular-nums;
-            -webkit-font-variant-numeric: tabular-nums;
-        }
+        /* DEPARTURES */
+        .dep-widget{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-flex:1;flex:1;padding:15px}
+        .dep-header{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;border-bottom:2px solid #eb0000;padding-bottom:6px;margin-bottom:8px}
+        .dep-header-title{font-size:16px;font-weight:700;color:#eb0000}
+        .dep-header-sub{font-size:10px;color:#8e8e93}
+        .dep-list{-webkit-flex:1;flex:1;overflow-y:auto}
+        .dep-row{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-flex-direction:row;flex-direction:row;-webkit-box-align:center;-webkit-align-items:center;align-items:center;border-bottom:1px solid #2c2c2e;padding:8px 0}
+        .dep-line{width:10%;font-size:11px;font-weight:700;padding:3px 6px;border-radius:4px;text-align:center;color:#fff}
+        .line-train{background:#eb0000}
+        .line-bus{background:#007aff}
+        .dep-dest{width:55%;padding-left:8px}
+        .dep-dest-name{font-size:14px;font-weight:700}
+        .dep-dest-from{font-size:10px;color:#8e8e93}
+        .dep-time{width:35%;text-align:right;font-size:13px;font-weight:700}
+        .dep-remaining{color:#30d158}
+        .dep-absolute{font-size:11px;color:#8e8e93;font-weight:400}
+        .dep-delay{color:#ff453a;font-weight:700}
 
-        /* CALENDAR WIDGET */
-        .calendar-widget {
-            -webkit-box-flex: 1;
-            -webkit-flex: 1;
-            flex: 1;
-            margin-bottom: 15px;
-            padding: 12px;
-        }
-        .calendar-header {
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: #ff9f0a;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        .calendar-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .calendar-grid th {
-            color: #8e8e93;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 0;
-            text-align: center;
-            width: 14.28%;
-        }
-        .calendar-grid td {
-            text-align: center;
-            font-size: 15px;
-            padding: 5px 0;
-            font-weight: bold;
-            color: #ffffff;
-            height: 32px;
-        }
-        .calendar-grid td.other-month {
-            color: #3a3a3c;
-        }
-        .calendar-grid td.today {
-            background-color: #30d158;
-            color: #000000;
-            border-radius: 50%;
-            -webkit-border-radius: 50%;
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            line-height: 28px;
-            margin: 2px auto;
-        }
+        /* ALERTS */
+        .alert-box{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid}
+        .alert-ok{border-color:#30d158;color:#30d158}
+        .alert-warn{border-color:#ff9f0a;color:#ff9f0a;background:rgba(255,159,10,0.1)}
+        .alert-danger{border-color:#ff453a;color:#ff453a;background:rgba(255,69,58,0.1);-webkit-animation:pulse 1.5s infinite}
+        @-webkit-keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
+        @keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
 
-        /* WEATHER WIDGET */
-        .weather-widget {
-            padding: 12px;
-        }
-        .weather-title {
-            font-size: 14px;
-            color: #8e8e93;
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        
-        /* Hourly forecast container */
-        .weather-hourly {
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: horizontal;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: row;
-            flex-direction: row;
-            -webkit-box-pack: justify;
-            -webkit-justify-content: space-between;
-            justify-content: space-between;
-            border-bottom: 1px solid #2c2c2e;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-        }
-        .hourly-item {
-            text-align: center;
-            width: 18%;
-        }
-        .hourly-time {
-            font-size: 11px;
-            color: #8e8e93;
-        }
-        .hourly-icon {
-            font-size: 20px;
-            margin: 3px 0;
-        }
-        .hourly-temp {
-            font-size: 13px;
-            font-weight: bold;
-        }
+        .loading{text-align:center;color:#8e8e93;font-size:13px;padding:10px}
 
-        /* Daily forecast */
-        .weather-daily {
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: vertical;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: column;
-            flex-direction: column;
-        }
-        .daily-item {
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: horizontal;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: row;
-            flex-direction: row;
-            -webkit-box-pack: justify;
-            -webkit-justify-content: space-between;
-            justify-content: space-between;
-            -webkit-box-align: center;
-            -webkit-align-items: center;
-            align-items: center;
-            padding: 4px 0;
-            font-size: 13px;
-        }
-        .daily-day {
-            width: 35%;
-            font-weight: bold;
-        }
-        .daily-icon-text {
-            width: 30%;
-            text-align: center;
-            font-size: 16px;
-        }
-        .daily-temp {
-            width: 35%;
-            text-align: right;
-            font-weight: bold;
-        }
-        .temp-max { color: #ff453a; }
-        .temp-min { color: #0a84ff; margin-left: 6px; }
-
-        /* DEPARTURES BOARD WIDGET (SBB Screen look) */
-        .departures-widget {
-            -webkit-box-flex: 1;
-            -webkit-flex: 1;
-            flex: 1;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-orient: vertical;
-            -webkit-box-direction: normal;
-            -webkit-flex-direction: column;
-            flex-direction: column;
-            padding: 15px;
-            overflow: hidden;
-        }
-        .board-title {
-            font-size: 18px;
-            color: #eb0000; /* Swiss red */
-            font-weight: bold;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #eb0000;
-            padding-bottom: 6px;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-box-pack: justify;
-            -webkit-justify-content: space-between;
-            justify-content: space-between;
-            -webkit-box-align: center;
-            -webkit-align-items: center;
-            align-items: center;
-        }
-        .board-subtitle {
-            font-size: 11px;
-            color: #8e8e93;
-            font-weight: normal;
-        }
-        .departures-list {
-            -webkit-box-flex: 1;
-            -webkit-flex: 1;
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        /* Table of departures */
-        .departure-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .departure-table th {
-            text-align: left;
-            color: #8e8e93;
-            font-size: 12px;
-            text-transform: uppercase;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #2c2c2e;
-        }
-        .departure-row {
-            border-bottom: 1px solid #2c2c2e;
-        }
-        .departure-row:last-child {
-            border-bottom: none;
-        }
-        .departure-row td {
-            padding: 10px 0;
-            vertical-align: middle;
-        }
-        
-        /* Badges for train and bus lines */
-        .line-badge {
-            display: inline-block;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-align: center;
-            min-width: 42px;
-        }
-        .badge-train {
-            background-color: #eb0000;
-            color: #ffffff;
-        }
-        .badge-bus {
-            background-color: #007aff;
-            color: #ffffff;
-        }
-
-        .dest-col {
-            font-size: 15px;
-            font-weight: bold;
-            padding-left: 10px !important;
-        }
-        .dest-sub {
-            font-size: 11px;
-            color: #8e8e93;
-            font-weight: normal;
-            margin-top: 2px;
-        }
-
-        .time-col {
-            text-align: right;
-            font-size: 15px;
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
-            -webkit-font-variant-numeric: tabular-nums;
-        }
-        .time-remaining {
-            color: #30d158; /* green */
-        }
-        .time-absolute {
-            font-size: 13px;
-            color: #8e8e93;
-            margin-left: 4px;
-            font-weight: normal;
-        }
-        .delay-text {
-            color: #ff453a !important; /* red delay display */
-            font-weight: bold;
-        }
-
-        /* Error, loading and empty state indicators */
-        .status-msg {
-            text-align: center;
-            color: #8e8e93;
-            font-size: 14px;
-            padding: 20px 0;
+        @media(max-width:560px){
+            .col-left{display:none}
+            .col-right{width:100%}
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        
-        <!-- LEFT COLUMN: TIME, CALENDAR, WEATHER -->
-        <div class="left-panel">
-            
-            <!-- Clock Widget -->
-            <div class="card clock-widget">
-                <div id="clock" class="clock-time">00:00:00</div>
+<div class="row">
+    <div class="col-left">
+        <div class="card clock-row">
+            <div class="solar-item solar-past">
+                <div class="solar-icon" id="icon-past"></div>
+                <div class="solar-label" id="lbl-past">Ayer</div>
+                <div class="solar-time" id="time-past">--:--</div>
             </div>
-
-            <!-- Calendar Widget -->
-            <div class="card calendar-widget">
-                <div id="calendar-title" class="calendar-header">Julio 2026</div>
-                <table class="calendar-grid">
-                    <thead>
-                        <tr>
-                            <th>LU</th>
-                            <th>MA</th>
-                            <th>MI</th>
-                            <th>JU</th>
-                            <th>VI</th>
-                            <th>SÁ</th>
-                            <th>DO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calendar-body">
-                        <!-- Dynamic content -->
-                    </tbody>
-                </table>
+            <div class="clock-center">
+                <div class="clock-time" id="clock">00:00:00</div>
+                <div class="clock-date" id="clock-date"></div>
             </div>
-
-            <!-- Weather Widget -->
-            <div class="card weather-widget">
-                <div class="weather-title">El Tiempo (Birmensdorf)</div>
-                
-                <!-- Hourly (Next 5 hours) -->
-                <div id="weather-hourly-container" class="weather-hourly">
-                    <div class="status-msg">Cargando...</div>
-                </div>
-
-                <!-- Daily (Next 3 days) -->
-                <div id="weather-daily-container" class="weather-daily">
-                    <!-- Dynamic content -->
-                </div>
-            </div>
-
-        </div>
-
-        <!-- RIGHT COLUMN: SBB BOARD (DEPARTURES) -->
-        <div class="right-panel">
-            <div class="card departures-widget">
-                <div class="board-title">
-                    <span>SALIDAS DIRECCIÓN ZÚRICH</span>
-                    <span id="update-indicator" class="board-subtitle">Birmensdorf ZH & Zentrum</span>
-                </div>
-                <div class="departures-list">
-                    <table class="departure-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 15%;">Línea</th>
-                                <th style="width: 50%; padding-left: 10px;">Destino / Vía</th>
-                                <th style="width: 35%; text-align: right;">Salida</th>
-                            </tr>
-                        </thead>
-                        <tbody id="departures-body">
-                            <tr>
-                                <td colspan="3" class="status-msg">Cargando salidas en tiempo real...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="solar-item solar-next">
+                <div class="solar-icon" id="icon-next"></div>
+                <div class="solar-label" id="lbl-next">Próximo</div>
+                <div class="solar-time" id="time-next">--:--</div>
             </div>
         </div>
 
+        <div class="card cal-widget">
+            <div class="cal-title" id="cal-title"></div>
+            <table class="cal-grid"><thead><tr><th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead><tbody id="cal-body"></tbody></table>
+        </div>
+
+        <div class="card news-widget">
+            <div class="news-title">Noticias</div>
+            <div class="news-body" id="news-body"><span class="loading">Cargando noticias...</span></div>
+        </div>
+
+        <div class="card wx-widget">
+            <div class="wx-title">Tiempo — Birmensdorf</div>
+            <div class="wx-grid" id="wx-current"><span class="loading">Cargando...</span></div>
+            <div class="wx-hourly" id="wx-hourly"></div>
+            <div id="wx-daily"></div>
+        </div>
     </div>
 
-    <!-- ES5 JAVASCRIPT CODE - FULLY COMPATIBLE WITH iOS 9 SAFARI -->
-    <script>
-        // Polyfill for Date.now if missing in super old browsers
-        if (!Date.now) {
-            Date.now = function() { return new Date().getTime(); };
+    <div class="col-right">
+        <div class="card dep-widget">
+            <div class="dep-header">
+                <span class="dep-header-title">SALIDAS → ZÜRICH</span>
+                <span class="dep-header-sub" id="dep-sub">Birmensdorf ZH & Zentrum</span>
+            </div>
+            <div class="dep-list" id="dep-list"><span class="loading">Cargando salidas...</span></div>
+            <div id="dep-alerts"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    /* ================= UTILS ================= */
+    function pad(n){return n<10?"0"+n:""+n}
+
+    function parseISODate(str){
+        var p=str.replace("T","-").replace(":","-").split(/[-T:Z]/);
+        return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]),parseInt(p[3])||0,parseInt(p[4])||0);
+    }
+
+    function fmt24h(d){return pad(d.getHours())+":"+pad(d.getMinutes())}
+
+    function diffMin(futureMs,pastMs){return Math.round((futureMs-pastMs)/60000)}
+
+    /* ================= CLOCK + SOLAR ================= */
+    var solarData=[];
+
+    function updateClock(){
+        var now=new Date();
+        document.getElementById("clock").innerHTML=pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
+        var days=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+        var months=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+        document.getElementById("clock-date").innerHTML=days[now.getDay()]+", "+now.getDate()+" "+months[now.getMonth()]+" "+now.getFullYear();
+
+        if(solarData.length>0){
+            var nowMs=now.getTime();
+            var nextEvt=null, pastEvt=null;
+            for(var i=0;i<solarData.length;i++){
+                var evtMs=solarData[i].date.getTime();
+                if(evtMs>nowMs){if(!nextEvt)nextEvt=solarData[i]}
+                else{pastEvt=solarData[i]}
+            }
+            if(!nextEvt)nextEvt=solarData[solarData.length-1];
+            if(!pastEvt)pastEvt=solarData[0];
+
+            document.getElementById("icon-past").innerHTML=pastEvt.type==="sunrise"?"🌅":"🌇";
+            document.getElementById("lbl-past").innerHTML=pastEvt.type==="sunrise"?"Amanecer":"Ocaso";
+            document.getElementById("time-past").innerHTML=fmt24h(pastEvt.date);
+            document.getElementById("icon-next").innerHTML=nextEvt.type==="sunrise"?"🌅":"🌇";
+            document.getElementById("lbl-next").innerHTML=nextEvt.type==="sunrise"?"Amanecer":"Ocaso";
+            document.getElementById("time-next").innerHTML=fmt24h(nextEvt.date);
+        }
+    }
+    setInterval(updateClock,1000);
+
+    /* ================= CALENDAR ================= */
+    function drawCalendar(){
+        var now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+        var monthNames=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        document.getElementById("cal-title").innerHTML=monthNames[m]+" "+y;
+        var first=new Date(y,m,1).getDay();
+        var startDay=first===0?6:first-1;
+        var daysInMonth=new Date(y,m+1,0).getDate();
+        var daysInPrev=new Date(y,m,0).getDate();
+        var html="",day=1,nextDay=1;
+        for(var r=0;r<6;r++){
+            html+="<tr>";
+            for(var c=0;c<7;c++){
+                var idx=r*7+c;
+                if(idx<startDay){
+                    html+="<td class='other'>"+(daysInPrev-startDay+idx+1)+"</td>";
+                } else if(day>daysInMonth){
+                    html+="<td class='other'>"+nextDay+"</td>";
+                    nextDay++;
+                } else {
+                    if(day===today){html+="<td><span class='today'>"+day+"</span></td>"}
+                    else{html+="<td>"+day+"</td>"}
+                    day++;
+                }
+            }
+            html+="</tr>";
+            if(day>daysInMonth&&r>=4)break;
+        }
+        document.getElementById("cal-body").innerHTML=html;
+    }
+    drawCalendar();
+
+    /* ================= WEATHER (Open-Meteo) ================= */
+    var WMO={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌧️",53:"🌧️",55:"🌧️",56:"🌧️",57:"🌧️",
+        61:"🌧️",63:"🌧️",65:"🌧️",66:"🌧️",67:"🌧️",71:"❄️",73:"❄️",75:"❄️",77:"❄️",
+        80:"🌧️",81:"🌧️",82:"🌧️",85:"❄️",86:"❄️",95:"⛈️",96:"⛈️",99:"⛈️"};
+
+    function fetchWeather(){
+        var url="https://api.open-meteo.com/v1/forecast?latitude=47.3587&longitude=8.4387"
+            +"&hourly=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation_probability"
+            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
+            +"&timezone=Europe%2FZurich&past_days=1&forecast_days=3&current_weather=true";
+        var xhr=new XMLHttpRequest();
+        xhr.open("GET",url,true);
+        xhr.onreadystatechange=function(){
+            if(xhr.readyState===4&&xhr.status===200){
+                try{renderWeather(JSON.parse(xhr.responseText))}catch(e){}
+            }
+        };
+        xhr.send();
+    }
+
+    function renderWeather(d){
+        /* Solar events for clock */
+        if(d.daily&&d.daily.sunrise){
+            solarData=[];
+            for(var i=0;i<d.daily.sunrise.length;i++){
+                solarData.push({type:"sunrise",date:parseISODate(d.daily.sunrise[i])});
+                solarData.push({type:"sunset",date:parseISODate(d.daily.sunset[i])});
+            }
+            solarData.sort(function(a,b){return a.date-b.date});
+            updateClock();
         }
 
-        // Global variables
-        var departuresData = { train: null, bus: null };
+        /* Current conditions from hourly matching current hour */
+        if(d.current_weather){
+            var now=new Date(), nowH=now.getHours();
+            var times=d.hourly?d.hourly.time:[];
+            var idx=-1;
+            for(var i=0;i<times.length;i++){
+                var t=new Date(times[i].replace("T"," ").replace(/:/,":"));
+                if(t.getHours()===nowH){idx=i;break}
+            }
+            if(idx===-1)idx=0;
+            var h=d.hourly;
+            var curW=d.current_weather;
+            var wmoCode=curW.weathercode;
+            var html="";
+            html+="<div class='wx-stat'><div class='wx-stat-icon'>🌡️</div><div class='wx-stat-val'>"+Math.round(curW.temperature)+"°C</div><div class='wx-stat-lbl'>Temperatura</div></div>";
+            html+="<div class='wx-stat'><div class='wx-stat-icon'>🤔</div><div class='wx-stat-val'>"+Math.round(h.apparent_temperature[idx])+"°C</div><div class='wx-stat-lbl'>Sensación</div></div>";
+            html+="<div class='wx-stat'><div class='wx-stat-icon'>💧</div><div class='wx-stat-val'>"+h.relative_humidity_2m[idx]+"%</div><div class='wx-stat-lbl'>Humedad</div></div>";
+            html+="<div class='wx-stat'><div class='wx-stat-icon'>💨</div><div class='wx-stat-val'>"+Math.round(h.wind_speed_10m[idx])+" km/h</div><div class='wx-stat-lbl'>Viento</div></div>";
+            document.getElementById("wx-current").innerHTML=html;
+        }
 
-        // 1. DIGITAL CLOCK
-        function updateClock() {
-            var now = new Date();
-            var hours = now.getHours();
-            var minutes = now.getMinutes();
-            var seconds = now.getSeconds();
+        /* Hourly next 5h */
+        if(d.hourly){
+            var times=d.hourly.time, temps=d.hourly.temperature_2m, codes=d.hourly.weather_code;
+            var now=new Date(), nowH=now.getHours(), startIdx=-1;
+            var todayStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(nowH);
+            for(var i=0;i<times.length;i++){
+                if(times[i].substring(0,13)===todayStr.substring(0,13)){startIdx=i;break}
+            }
+            if(startIdx===-1)startIdx=0;
+            var h="";
+            for(var j=0;j<5;j++){
+                var k=startIdx+j;
+                if(k<times.length){
+                    var tStr=times[k].split("T")[1];
+                    h+="<div class='wx-h'><div class='wx-h-time'>"+tStr+"</div><div class='wx-h-icon'>"+(WMO[codes[k]]||"☁️")+"</div><div class='wx-h-temp'>"+Math.round(temps[k])+"°</div></div>";
+                }
+            }
+            document.getElementById("wx-hourly").innerHTML=h;
+        }
 
-            // Padding
-            if (hours < 10) hours = "0" + hours;
-            if (minutes < 10) minutes = "0" + minutes;
-            if (seconds < 10) seconds = "0" + seconds;
+        /* Daily 3 days */
+        if(d.daily){
+            var weekdays=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+            var h="";
+            for(var i=0;i<3&&i<d.daily.time.length;i++){
+                var dt=new Date(d.daily.time[i]+"T12:00:00");
+                var dn=i===0?"Hoy":i===1?"Mañana":weekdays[dt.getDay()];
+                h+="<div class='wx-daily-item'><div class='wx-d-day'>"+dn+"</div><div class='wx-d-icon'>"+(WMO[d.daily.weather_code[i]]||"☁️")+"</div><div class='wx-d-temp'><span class='wx-max'>"+Math.round(d.daily.temperature_2m_max[i])+"°</span><span class='wx-min'>"+Math.round(d.daily.temperature_2m_min[i])+"°</span></div></div>";
+            }
+            document.getElementById("wx-daily").innerHTML=h;
+        }
+    }
+    fetchWeather();
 
-            var clockEl = document.getElementById("clock");
-            if (clockEl) {
-                clockEl.innerHTML = hours + ":" + minutes + ":" + seconds;
+    /* ================= TRANSPORT ================= */
+    function goesToZurich(conn){
+        if(!conn.to)return false;
+        var dest=conn.to.toLowerCase();
+        if(dest.indexOf("zürich")!==-1||dest.indexOf("zurich")!==-1)return true;
+        if(conn.passList){
+            for(var i=0;i<conn.passList.length;i++){
+                var sn=(conn.passList[i].station.name||"").toLowerCase();
+                if(sn.indexOf("zürich")!==-1||sn.indexOf("zurich")!==-1)return true;
             }
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        return false;
+    }
 
-        // 2. MONTHLY CALENDAR SHEET
-        function generateCalendar() {
-            var now = new Date();
-            var year = now.getFullYear();
-            var month = now.getMonth(); // 0-indexed
-            var today = now.getDate();
+    var depResults={train:null,bus:null};
 
-            var monthNames = [
-                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-            ];
+    function fetchDepartures(){
+        depResults.train=null;
+        depResults.bus=null;
 
-            // Set calendar header
-            var headerEl = document.getElementById("calendar-title");
-            if (headerEl) {
-                headerEl.innerHTML = monthNames[month] + " " + year;
+        var x1=new XMLHttpRequest();
+        x1.open("GET","https://transport.opendata.ch/v1/stationboard?station=Birmensdorf%20ZH&limit=20",true);
+        x1.onreadystatechange=function(){
+            if(x1.readyState===4){
+                try{depResults.train=x1.status===200?(JSON.parse(x1.responseText).stationboard||[]):[]}
+                catch(e){depResults.train=[]}
+                renderDeps();
             }
+        };
+        x1.send();
 
-            // Get first day of the month
-            var firstDayDate = new Date(year, month, 1);
-            var firstDayIndex = firstDayDate.getDay(); // 0 is Sunday, 1 is Monday...
-            // Convert to Monday-first (0 = Monday, 6 = Sunday)
-            var startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+        var x2=new XMLHttpRequest();
+        x2.open("GET","https://transport.opendata.ch/v1/stationboard?station=Birmensdorf%20ZH,%20Zentrum&limit=20",true);
+        x2.onreadystatechange=function(){
+            if(x2.readyState===4){
+                try{depResults.bus=x2.status===200?(JSON.parse(x2.responseText).stationboard||[]):[]}
+                catch(e){depResults.bus=[]}
+                renderDeps();
+            }
+        };
+        x2.send();
+    }
 
-            // Get number of days in the current month
-            var daysInMonth = new Date(year, month + 1, 0).getDate();
-            // Get number of days in the previous month
-            var daysInPrevMonth = new Date(year, month, 0).getDate();
+    function renderDeps(){
+        if(depResults.train===null||depResults.bus===null)return;
+        var merged=[],i;
+        for(i=0;i<depResults.train.length;i++){
+            var c=depResults.train[i];
+            if(goesToZurich(c)){
+                merged.push({type:"train",name:c.category+(c.number||""),to:c.to,sDep:c.stop.departure,ts:c.stop.departureTimestamp,delay:c.stop.delay,from:"Estación Tren"});
+            }
+        }
+        for(i=0;i<depResults.bus.length;i++){
+            var b=depResults.bus[i];
+            if(goesToZurich(b)){
+                merged.push({type:"bus",name:"Bus "+b.number,to:b.to,sDep:b.stop.departure,ts:b.stop.departureTimestamp,delay:b.stop.delay,from:"Zentrum (Bus)"});
+            }
+        }
+        merged.sort(function(a,b){return a.ts-b.ts});
 
-            var calendarBody = document.getElementById("calendar-body");
-            if (!calendarBody) return;
-            calendarBody.innerHTML = "";
+        var nowMs=Date.now(), html="", count=0, alertCount=0;
+        for(i=0;i<merged.length&&count<10;i++){
+            var m=merged[i];
+            var delayMins=(typeof m.delay==="number")?m.delay:0;
+            var actMs=m.ts*1000+delayMins*60000;
+            var rem=diffMin(actMs,nowMs);
+            if(rem<-1)continue;
+            count++;
 
-            var html = "";
-            var dayCounter = 1;
-            var nextMonthDayCounter = 1;
+            var lc=m.type==="train"?"line-train":"line-bus";
+            var remText=rem<=0?"ahora":"en "+rem+" min";
+            var schedT=format24hISO(m.sDep);
 
-            // 6 rows for calendar sheet
-            for (var r = 0; r < 6; r++) {
-                html += "<tr>";
-                for (var c = 0; c < 7; c++) {
-                    var cellIndex = r * 7 + c;
-                    
-                    if (cellIndex < startDay) {
-                        // Previous month days
-                        var prevDay = daysInPrevMonth - startDay + cellIndex + 1;
-                        html += "<td class='other-month'>" + prevDay + "</td>";
-                    } else if (dayCounter > daysInMonth) {
-                        // Next month days
-                        html += "<td class='other-month'>" + nextMonthDayCounter + "</td>";
-                        nextMonthDayCounter++;
-                    } else {
-                        // Current month days
-                        if (dayCounter === today) {
-                            html += "<td><span class='today'>" + dayCounter + "</span></td>";
-                        } else {
-                            html += "<td>" + dayCounter + "</td>";
-                        }
-                        dayCounter++;
+            html+="<div class='dep-row'>";
+            html+="<div class='dep-line "+lc+"'>"+m.name+"</div>";
+            html+="<div class='dep-dest'><div class='dep-dest-name'>"+m.to+"</div><div class='dep-dest-from'>"+m.from+"</div></div>";
+            html+="<div class='dep-time'><span class='dep-remaining'>"+remText+"</span> <span class='dep-absolute'>("+schedT;
+            if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
+            html+=")</span></div></div>";
+        }
+        document.getElementById("dep-list").innerHTML=html||"<span class='loading'>No hay salidas hacia Zúrich</span>";
+
+        /* Alerts */
+        var alertEl=document.getElementById("dep-alerts");
+        if(alertCount>0){
+            alertEl.innerHTML="<div class='alert-box alert-danger'>⚠ "+alertCount+" conexión(es) con retraso detectada(s). Comprueba los horarios.</div>";
+        } else if(count>0){
+            alertEl.innerHTML="<div class='alert-box alert-ok'>✅ Servicio operativo sin retrasos en Birmensdorf</div>";
+        } else {
+            alertEl.innerHTML="";
+        }
+
+        var now=new Date();
+        document.getElementById("dep-sub").innerHTML="Act: "+pad(now.getHours())+":"+pad(now.getMinutes())+" (Birmensdorf ZH & Zentrum)";
+    }
+
+    function format24hISO(iso){
+        if(!iso)return"--:--";
+        var parts=iso.split("T");
+        if(parts.length<2)return"--:--";
+        return parts[1].substring(0,5);
+    }
+
+    fetchDepartures();
+    setInterval(fetchDepartures,60000);
+
+    /* ================= NEWS ================= */
+    var newsItems=[];
+    var newsIdx=0;
+
+    function fetchNews(){
+        newsItems=[];
+        var feeds=[
+            {url:"https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",badge:"España",cls:"badge-nacional"},
+            {url:"https://www.rtve.es/rss/deportes.xml",badge:"Deportes",cls:"badge-deportes"},
+            {url:"https://e00-marca.uecdn.es/rss/portada.xml",badge:"Deportes",cls:"badge-deportes"}
+        ];
+        var loaded=0;
+
+        for(var f=0;f<feeds.length;f++){
+            (function(feed){
+                var xhr=new XMLHttpRequest();
+                xhr.open("GET","https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(feed.url),true);
+                xhr.onreadystatechange=function(){
+                    if(xhr.readyState===4){
+                        try{
+                            var d=JSON.parse(xhr.responseText);
+                            if(d.status==="ok"&&d.items){
+                                for(var i=0;i<d.items.length&&newsItems.length<30;i++){
+                                    var item=d.items[i];
+                                    var title=item.title?item.title.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&#039;/g,"'").replace(/&quot;/g,"\""):"";
+                                    if(title.length>90)title=title.substring(0,87)+"...";
+                                    newsItems.push({title:title,link:item.link||"#",badge:feed.badge,cls:feed.cls});
+                                }
+                            }
+                        }catch(e){}
+                        loaded++;
+                        if(loaded===feeds.length)startNewsRotation();
                     }
-                }
-                html += "</tr>";
-                if (dayCounter > daysInMonth && r >= 4) {
-                    // Stop drawing rows if we are past the month end and reached at least 5 rows
-                    break;
-                }
-            }
-            calendarBody.innerHTML = html;
+                };
+                xhr.send();
+            })(feeds[f]);
         }
-        generateCalendar();
-        // Regenerate calendar daily
-        setInterval(generateCalendar, 3600000);
+    }
 
-        // Helper to format ISO Date strings to 24h format (HH:MM)
-        function format24h(isoString) {
-            if (!isoString) return "--:--";
-            // format: "2026-07-02T20:05:00+0200" or similar
-            var parts = isoString.split("T");
-            if (parts.length < 2) return "--:--";
-            var timePart = parts[1];
-            var timeSub = timePart.split(":");
-            if (timeSub.length < 2) return "--:--";
-            return timeSub[0] + ":" + timeSub[1];
-        }
+    function startNewsRotation(){
+        if(newsItems.length===0)return;
+        rotateNews();
+        setInterval(rotateNews,8000);
+    }
 
-        // Map weather WMO codes to Emojis and descriptions
-        function getWeatherEmoji(code) {
-            if (code === 0) return "☀️"; // Clear sky
-            if (code === 1 || code === 2 || code === 3) return "⛅"; // Mainly clear, partly cloudy, overcast
-            if (code === 45 || code === 48) return "🌫️"; // Fog
-            if (code === 51 || code === 53 || code === 55) return "🌧️"; // Drizzle
-            if (code === 56 || code === 57) return "🌧️"; // Freezing Drizzle
-            if (code === 61 || code === 63 || code === 65) return "🌧️"; // Rain
-            if (code === 66 || code === 67) return "🌧️"; // Freezing Rain
-            if (code === 71 || code === 73 || code === 75) return "❄️"; // Snow fall
-            if (code === 77) return "❄️"; // Snow grains
-            if (code === 80 || code === 81 || code === 82) return "🌧️"; // Rain showers
-            if (code === 85 || code === 86) return "❄️"; // Snow showers
-            if (code === 95) return "⛈️"; // Thunderstorm
-            if (code === 96 || code === 99) return "⛈️"; // Thunderstorm with hail
-            return "☁️";
-        }
+    function rotateNews(){
+        if(newsItems.length===0)return;
+        var item=newsItems[newsIdx%newsItems.length];
+        newsIdx++;
+        var el=document.getElementById("news-body");
+        el.innerHTML="<a class='news-link' href='"+item.link+"' target='_blank' rel='noopener'><span class='news-badge "+item.cls+"'>"+item.badge+"</span>"+item.title+"</a>";
+    }
 
-        // 3. WEATHER (OPEN-METEO)
-        function fetchWeather() {
-            var url = "https://api.open-meteo.com/v1/forecast?latitude=47.3587&longitude=8.4387&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Zurich&forecast_days=3";
-            
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        updateWeatherUI(data);
-                    } catch (e) {
-                        console.error("Error parsing weather data: " + e);
-                    }
-                }
-            };
-            xhr.send();
-        }
+    fetchNews();
+    setInterval(fetchNews,900000);
 
-        function updateWeatherUI(data) {
-            // A. Hourly forecast (next 5 hours starting from now)
-            var hourlyContainer = document.getElementById("weather-hourly-container");
-            if (hourlyContainer && data.hourly) {
-                var hourlyHtml = "";
-                var times = data.hourly.time;
-                var temps = data.hourly.temperature_2m;
-                var codes = data.hourly.weather_code;
-
-                var now = new Date();
-                var currentHourStr = now.getFullYear() + "-" + 
-                    (now.getMonth() + 1 < 10 ? "0" : "") + (now.getMonth() + 1) + "-" + 
-                    (now.getDate() < 10 ? "0" : "") + now.getDate() + "T" + 
-                    (now.getHours() < 10 ? "0" : "") + now.getHours() + ":00";
-
-                // Find index of current hour
-                var startIndex = 0;
-                for (var i = 0; i < times.length; i++) {
-                    // Match hour parts
-                    if (times[i].substring(0, 13) === currentHourStr.substring(0, 13)) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-
-                // Render 5 hours
-                for (var h = 0; h < 5; h++) {
-                    var idx = startIndex + h;
-                    if (idx < times.length) {
-                        var tStr = times[idx].split("T")[1]; // "HH:MM"
-                        var tempVal = Math.round(temps[idx]);
-                        var emoji = getWeatherEmoji(codes[idx]);
-
-                        hourlyHtml += "<div class='hourly-item'>";
-                        hourlyHtml += "<div class='hourly-time'>" + tStr + "</div>";
-                        hourlyHtml += "<div class='hourly-icon'>" + emoji + "</div>";
-                        hourlyHtml += "<div class='hourly-temp'>" + tempVal + "°</div>";
-                        hourlyHtml += "</div>";
-                    }
-                }
-                hourlyContainer.innerHTML = hourlyHtml;
-            }
-
-            // B. Daily forecast (3 days)
-            var dailyContainer = document.getElementById("weather-daily-container");
-            if (dailyContainer && data.daily) {
-                var dailyHtml = "";
-                var days = data.daily.time;
-                var maxTemps = data.daily.temperature_2m_max;
-                var minTemps = data.daily.temperature_2m_min;
-                var dailyCodes = data.daily.weather_code;
-
-                var weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-
-                for (var d = 0; d < 3; d++) {
-                    if (d < days.length) {
-                        var dayDate = new Date(days[d]);
-                        var dayName = weekdays[dayDate.getDay()];
-                        if (d === 0) dayName = "Hoy";
-                        if (d === 1) dayName = "Mañana";
-
-                        var maxT = Math.round(maxTemps[d]);
-                        var minT = Math.round(minTemps[d]);
-                        var emoji = getWeatherEmoji(dailyCodes[d]);
-
-                        dailyHtml += "<div class='daily-item'>";
-                        dailyHtml += "<div class='daily-day'>" + dayName + "</div>";
-                        dailyHtml += "<div class='daily-icon-text'>" + emoji + "</div>";
-                        dailyHtml += "<div class='daily-temp'>";
-                        dailyHtml += "<span class='temp-max'>" + maxT + "°</span>";
-                        dailyHtml += "<span class='temp-min'>" + minT + "°</span>";
-                        dailyHtml += "</div>";
-                        dailyHtml += "</div>";
-                    }
-                }
-                dailyContainer.innerHTML = dailyHtml;
-            }
-        }
-
-        // 4. TRANSPORT (TRENES Y BUSES EN DIRECCIÓN ZÚRICH)
-        function fetchDepartures() {
-            departuresData.train = null;
-            departuresData.bus = null;
-
-            // Fetch Train Station (Birmensdorf ZH)
-            var trainUrl = "https://transport.opendata.ch/v1/stationboard?station=Birmensdorf%20ZH&limit=15";
-            var trainXhr = new XMLHttpRequest();
-            trainXhr.open("GET", trainUrl, true);
-            trainXhr.onreadystatechange = function() {
-                if (trainXhr.readyState === 4) {
-                    if (trainXhr.status === 200) {
-                        try {
-                            var data = JSON.parse(trainXhr.responseText);
-                            departuresData.train = data.stationboard || [];
-                        } catch (e) {
-                            console.error("Error train: " + e);
-                            departuresData.train = [];
-                        }
-                    } else {
-                        departuresData.train = [];
-                    }
-                    combineAndRenderDepartures();
-                }
-            };
-            trainXhr.send();
-
-            // Fetch Bus Stop (Birmensdorf ZH, Zentrum)
-            var busUrl = "https://transport.opendata.ch/v1/stationboard?station=Birmensdorf%20ZH,%20Zentrum&limit=15";
-            var busXhr = new XMLHttpRequest();
-            busXhr.open("GET", busUrl, true);
-            busXhr.onreadystatechange = function() {
-                if (busXhr.readyState === 4) {
-                    if (busXhr.status === 200) {
-                        try {
-                            var data = JSON.parse(busXhr.responseText);
-                            departuresData.bus = data.stationboard || [];
-                        } catch (e) {
-                            console.error("Error bus: " + e);
-                            departuresData.bus = [];
-                        }
-                    } else {
-                        departuresData.bus = [];
-                    }
-                    combineAndRenderDepartures();
-                }
-            };
-            busXhr.send();
-        }
-
-        // Helper: Check if connection goes towards Zurich
-        function goesTowardsZurich(connection) {
-            // 1. Direct check on destination name
-            var dest = (connection.to || "").toLowerCase();
-            if (dest.indexOf("zürich") !== -1 || dest.indexOf("zurich") !== -1) {
-                return true;
-            }
-            // 2. Traversal of the remaining route stops
-            if (connection.passList && connection.passList.length > 0) {
-                for (var i = 0; i < connection.passList.length; i++) {
-                    var stopName = (connection.passList[i].station.name || "").toLowerCase();
-                    if (stopName.indexOf("zürich") !== -1 || stopName.indexOf("zurich") !== -1) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function combineAndRenderDepartures() {
-            // Wait until both APIs have responded
-            if (departuresData.train === null || departuresData.bus === null) {
-                return;
-            }
-
-            var merged = [];
-            var i;
-
-            // Process trains
-            for (i = 0; i < departuresData.train.length; i++) {
-                var c = departuresData.train[i];
-                if (goesTowardsZurich(c)) {
-                    merged.push({
-                        type: "train",
-                        name: c.category + c.number, // S9, S14, etc.
-                        to: c.to,
-                        scheduledDeparture: c.stop.departure,
-                        departureTimestamp: c.stop.departureTimestamp,
-                        delay: c.stop.delay,
-                        stopName: "Estación Tren"
-                    });
-                }
-            }
-
-            // Process buses
-            for (i = 0; i < departuresData.bus.length; i++) {
-                var b = departuresData.bus[i];
-                if (goesTowardsZurich(b)) {
-                    merged.push({
-                        type: "bus",
-                        name: "Bus " + b.number, // Bus 350, Bus 215, etc.
-                        to: b.to,
-                        scheduledDeparture: b.stop.departure,
-                        departureTimestamp: b.stop.departureTimestamp,
-                        delay: b.stop.delay,
-                        stopName: "Zentrum (Bus)"
-                    });
-                }
-            }
-
-            // Sort departures chronologically by timestamp
-            merged.sort(function(a, b) {
-                return a.departureTimestamp - b.departureTimestamp;
-            });
-
-            var tbody = document.getElementById("departures-body");
-            if (!tbody) return;
-            tbody.innerHTML = "";
-
-            if (merged.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='3' class='status-msg'>No hay salidas hacia Zúrich en las próximas horas.</td></tr>";
-                return;
-            }
-
-            var nowMs = Date.now();
-            var renderedCount = 0;
-
-            for (i = 0; i < merged.length; i++) {
-                // limit to top 8 departures for space on screen
-                if (renderedCount >= 8) break;
-
-                var dep = merged[i];
-
-                // Calculate times
-                var delayMins = (typeof dep.delay === "number") ? dep.delay : 0;
-                var scheduledMs = dep.departureTimestamp * 1000;
-                var actualMs = scheduledMs + (delayMins * 60 * 1000);
-
-                var remainingMins = Math.round((actualMs - nowMs) / 60000);
-
-                // Skip departures that already left (e.g. remaining < -1 minute)
-                if (remainingMins < -1) {
-                    continue;
-                }
-
-                renderedCount++;
-
-                var lineBadgeClass = dep.type === "train" ? "badge-train" : "badge-bus";
-                var schedTimeStr = format24h(dep.scheduledDeparture);
-
-                var rowHtml = "<tr class='departure-row'>";
-                
-                // Column 1: Line Badge
-                rowHtml += "<td><span class='line-badge " + lineBadgeClass + "'>" + dep.name + "</span></td>";
-                
-                // Column 2: Destination & Stop Location
-                rowHtml += "<td class='dest-col'>";
-                rowHtml += "<div>" + dep.to + "</div>";
-                rowHtml += "<div class='dest-sub'>desde " + dep.stopName + "</div>";
-                rowHtml += "</td>";
-
-                // Column 3: Time Remaining + Scheduled absolute time + Delay in parentheses
-                rowHtml += "<td class='time-col'>";
-                
-                var remainingText = remainingMins <= 0 ? "ahora" : "en " + remainingMins + " min";
-                rowHtml += "<span class='time-remaining'>" + remainingText + "</span>";
-
-                // Handle delay correctly and colorize delay strictly inside parentheses
-                var absoluteTimeHtml = " <span class='time-absolute'>(" + schedTimeStr;
-                if (delayMins > 0) {
-                    absoluteTimeHtml += " <span class='delay-text'>+" + delayMins + "</span>";
-                }
-                absoluteTimeHtml += ")</span>";
-
-                rowHtml += absoluteTimeHtml;
-                rowHtml += "</td>";
-
-                rowHtml += "</tr>";
-                tbody.innerHTML += rowHtml;
-            }
-
-            // Update footer update time indicator
-            var indicator = document.getElementById("update-indicator");
-            if (indicator) {
-                var d = new Date();
-                var h = d.getHours();
-                var m = d.getMinutes();
-                if (h < 10) h = "0" + h;
-                if (m < 10) m = "0" + m;
-                indicator.innerHTML = "Act: " + h + ":" + m + " (Birmensdorf ZH & Zentrum)";
-            }
-        }
-
-        // Initial fetch
-        fetchWeather();
-        fetchDepartures();
-
-        // Refresh departures and weather every 60 seconds
-        setInterval(function() {
-            fetchDepartures();
-        }, 60000);
-
-        setInterval(function() {
-            fetchWeather();
-        }, 300000); // weather every 5 minutes is enough
-
-    </script>
+})();
+</script>
 </body>
 </html>
