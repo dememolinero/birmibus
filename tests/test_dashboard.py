@@ -73,12 +73,10 @@ class TestHTMLStructure(unittest.TestCase):
     def test_solar_past_elements(self):
         self.assertIn('id="icon-past"', self.html)
         self.assertIn('id="time-past"', self.html)
-        self.assertIn('id="lbl-past"', self.html)
 
     def test_solar_next_elements(self):
         self.assertIn('id="icon-next"', self.html)
         self.assertIn('id="time-next"', self.html)
-        self.assertIn('id="lbl-next"', self.html)
 
     def test_clock_date_element(self):
         self.assertIn('id="clock-date"', self.html)
@@ -179,7 +177,7 @@ class TestJavaScriptFunctions(unittest.TestCase):
         self.assertIn("function diffMin(", self.js)
 
     def test_goesToZurich_function_exists(self):
-        self.assertIn("function goesToZurich(", self.js)
+        self.assertIn("function shouldShowConnection(", self.js)
 
     def test_format24hISO_function_exists(self):
         self.assertIn("function format24hISO(", self.js)

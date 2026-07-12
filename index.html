@@ -17,7 +17,6 @@
         /* CLOCK + SOLAR */
         .clock-row{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
         .solar-item{text-align:center;width:28%}
-        .solar-label{font-size:9px;color:#8e8e93;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
         .solar-time{font-size:16px;font-weight:600}
         .solar-past{color:#8e8e93}
         .solar-next{color:#ff9f0a}
@@ -25,6 +24,7 @@
         .clock-center{text-align:center;width:44%}
         .clock-time{font-size:38px;font-weight:200;letter-spacing:3px}
         .clock-date{font-size:10px;color:#8e8e93;margin-top:2px}
+        .sky-arc{width:100%;max-width:180px;margin-top:4px}
 
         /* CALENDAR */
         .cal-widget{padding:8px}
@@ -107,16 +107,19 @@
         <div class="card clock-row">
             <div class="solar-item solar-past">
                 <div class="solar-icon" id="icon-past"></div>
-                <div class="solar-label" id="lbl-past">Ayer</div>
                 <div class="solar-time" id="time-past">--:--</div>
             </div>
             <div class="clock-center">
                 <div class="clock-time" id="clock">00:00:00</div>
                 <div class="clock-date" id="clock-date"></div>
+                <svg class="sky-arc" viewBox="0 0 200 65" id="sky-arc">
+                    <path d="M10,60 Q100,-5 190,60" stroke="#3a3a3c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <circle id="sun-pos" r="5" fill="#ff9f0a" display="none"/>
+                    <circle id="moon-pos" r="3.5" fill="#e5e5ea" display="none"/>
+                </svg>
             </div>
             <div class="solar-item solar-next">
                 <div class="solar-icon" id="icon-next"></div>
-                <div class="solar-label" id="lbl-next">Próximo</div>
                 <div class="solar-time" id="time-next">--:--</div>
             </div>
         </div>
@@ -167,6 +170,13 @@
 
     /* ================= CLOCK + SOLAR ================= */
     var solarData=[];
+    var moonData={rise:null,set:null};
+
+    function bezierPt(t){
+        var x=(1-t)*(1-t)*10+2*(1-t)*t*100+t*t*190;
+        var y=(1-t)*(1-t)*60+2*(1-t)*t*(-5)+t*t*60;
+        return{x:x,y:y};
+    }
 
     function updateClock(){
         var now=new Date();
@@ -175,23 +185,69 @@
         var months=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
         document.getElementById("clock-date").innerHTML=days[now.getDay()]+", "+now.getDate()+" "+months[now.getMonth()]+" "+now.getFullYear();
 
+        var sunEl=document.getElementById("sun-pos");
+        var moonEl=document.getElementById("moon-pos");
+
         if(solarData.length>0){
             var nowMs=now.getTime();
-            var nextEvt=null, pastEvt=null;
-            for(var i=0;i<solarData.length;i++){
-                var evtMs=solarData[i].date.getTime();
-                if(evtMs>nowMs){if(!nextEvt)nextEvt=solarData[i]}
-                else{pastEvt=solarData[i]}
-            }
-            if(!nextEvt)nextEvt=solarData[solarData.length-1];
-            if(!pastEvt)pastEvt=solarData[0];
+            var todaySunrise=null, todaySunset=null;
+            var nextSunset=null;
 
-            document.getElementById("icon-past").innerHTML=pastEvt.type==="sunrise"?"🌅":"🌇";
-            document.getElementById("lbl-past").innerHTML=pastEvt.type==="sunrise"?"Amanecer":"Anochecer";
-            document.getElementById("time-past").innerHTML=fmt24h(pastEvt.date);
-            document.getElementById("icon-next").innerHTML=nextEvt.type==="sunrise"?"🌅":"🌇";
-            document.getElementById("lbl-next").innerHTML=nextEvt.type==="sunrise"?"Amanecer":"Anochecer";
-            document.getElementById("time-next").innerHTML=fmt24h(nextEvt.date);
+            for(var i=0;i<solarData.length;i++){
+                var evt=solarData[i];
+                var evtMs=evt.date.getTime();
+                if(evt.type==="sunrise"){
+                    if(evtMs<=nowMs)todaySunrise=evt;
+                }
+                if(evt.type==="sunset"){
+                    if(evtMs<=nowMs)todaySunset=evt;
+                    else if(!nextSunset)nextSunset=evt;
+                }
+            }
+
+            if(!todaySunrise){
+                for(var i=0;i<solarData.length;i++){
+                    if(solarData[i].type==="sunrise"){todaySunrise=solarData[i];break}
+                }
+            }
+
+            var displaySunset=todaySunset||nextSunset;
+            document.getElementById("icon-past").innerHTML="🌅";
+            document.getElementById("time-past").innerHTML=todaySunrise?fmt24h(todaySunrise.date):"--:--";
+            document.getElementById("icon-next").innerHTML="🌇";
+            document.getElementById("time-next").innerHTML=displaySunset?fmt24h(displaySunset.date):"--:--";
+
+            if(todaySunrise && todaySunset){
+                var riseMs=todaySunrise.date.getTime();
+                var setMs=todaySunset.date.getTime();
+                if(nowMs>=riseMs && nowMs<=setMs){
+                    var t=(nowMs-riseMs)/(setMs-riseMs);
+                    var pt=bezierPt(t);
+                    sunEl.setAttribute("cx",pt.x);
+                    sunEl.setAttribute("cy",pt.y);
+                    sunEl.setAttribute("display","");
+                } else {
+                    sunEl.setAttribute("display","none");
+                }
+            } else {
+                sunEl.setAttribute("display","none");
+            }
+        }
+
+        if(moonData&&moonData.rise&&moonData.set){
+            var mRiseMs=moonData.rise.getTime();
+            var mSetMs=moonData.set.getTime();
+            if(nowMs>=mRiseMs&&nowMs<=mSetMs){
+                var mt=(nowMs-mRiseMs)/(mSetMs-mRiseMs);
+                var mpt=bezierPt(mt);
+                moonEl.setAttribute("cx",mpt.x);
+                moonEl.setAttribute("cy",mpt.y);
+                moonEl.setAttribute("display","");
+            } else {
+                moonEl.setAttribute("display","none");
+            }
+        } else {
+            moonEl.setAttribute("display","none");
         }
     }
     setInterval(updateClock,1000);
@@ -236,7 +292,7 @@
     function fetchWeather(){
         var url="https://api.open-meteo.com/v1/forecast?latitude=47.3587&longitude=8.4387"
             +"&hourly=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation_probability"
-            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max"
+            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,moonrise,moonset"
             +"&timezone=Europe%2FZurich&past_days=1&forecast_days=3&current_weather=true";
         var xhr=new XMLHttpRequest();
         xhr.open("GET",url,true);
@@ -257,6 +313,14 @@
                 solarData.push({type:"sunset",date:parseISODate(d.daily.sunset[i])});
             }
             solarData.sort(function(a,b){return a.date-b.date});
+
+            moonData={rise:null,set:null};
+            if(d.daily.moonrise&&d.daily.moonrise[1]){
+                moonData.rise=parseISODate(d.daily.moonrise[1]);
+            }
+            if(d.daily.moonset&&d.daily.moonset[1]){
+                moonData.set=parseISODate(d.daily.moonset[1]);
+            }
             updateClock();
         }
 
@@ -307,9 +371,9 @@
         if(d.daily){
             var weekdays=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
             var h="";
-            for(var i=0;i<3&&i<d.daily.time.length;i++){
+            for(var i=1;i<4&&i<d.daily.time.length;i++){
                 var dt=new Date(d.daily.time[i]+"T12:00:00");
-                var dn=i===0?"Hoy":i===1?"Mañana":weekdays[dt.getDay()];
+                var dn=i===1?"Hoy":i===2?"Mañana":weekdays[dt.getDay()];
                 var pMax=(d.daily.precipitation_probability_max&&d.daily.precipitation_probability_max[i]!=null)?d.daily.precipitation_probability_max[i]:0;
                 h+="<div class='wx-daily-item'><div class='wx-d-day'>"+dn+"</div><div class='wx-d-icon'>"+(WMO[d.daily.weather_code[i]]||"☁️")+"</div><div class='wx-d-prec'>🌧️"+pMax+"%</div><div class='wx-d-temp'><span class='wx-max'>"+Math.round(d.daily.temperature_2m_max[i])+"°</span><span class='wx-min'>"+Math.round(d.daily.temperature_2m_min[i])+"°</span></div></div>";
             }
