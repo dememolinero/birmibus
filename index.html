@@ -170,7 +170,6 @@
 
     /* ================= CLOCK + SOLAR ================= */
     var solarData=[];
-    var moonData={rise:null,set:null};
 
     function bezierPt(t){
         var x=(1-t)*(1-t)*10+2*(1-t)*t*100+t*t*190;
@@ -180,6 +179,7 @@
 
     function updateClock(){
         var now=new Date();
+        var nowMs=now.getTime();
         document.getElementById("clock").innerHTML=pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
         var days=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
         var months=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -189,7 +189,6 @@
         var moonEl=document.getElementById("moon-pos");
 
         if(solarData.length>0){
-            var nowMs=now.getTime();
             var todaySunrise=null, todaySunset=null;
             var nextSunset=null;
 
@@ -234,12 +233,29 @@
             }
         }
 
-        if(moonData&&moonData.rise&&moonData.set){
-            var mRiseMs=moonData.rise.getTime();
-            var mSetMs=moonData.set.getTime();
-            if(nowMs>=mRiseMs&&nowMs<=mSetMs){
-                var mt=(nowMs-mRiseMs)/(mSetMs-mRiseMs);
-                var mpt=bezierPt(mt);
+        var LUNAR=29.53059;
+        var newMoonRef=new Date(2000,0,6,18,14,0).getTime();
+        var daysSince=(nowMs-newMoonRef)/86400000;
+        var moonAge=((daysSince%LUNAR)+LUNAR)%LUNAR;
+        var moonVisible=moonAge>3&&moonAge<26;
+        if(moonVisible){
+            var moonPhase=moonAge/LUNAR;
+            var riseH=18-moonPhase*12;
+            if(riseH<0)riseH+=24;
+            var setH=riseH+12;
+            if(setH>=24)setH-=24;
+            var curH=now.getHours()+now.getMinutes()/60;
+            var mT;
+            if(riseH<setH){
+                if(curH>=riseH&&curH<=setH){mT=(curH-riseH)/(setH-riseH)}
+                else{mT=-1}
+            }else{
+                if(curH>=riseH){mT=(curH-riseH)/(setH+24-riseH)}
+                else if(curH<=setH){mT=(curH+24-riseH)/(setH+24-riseH)}
+                else{mT=-1}
+            }
+            if(mT>=0&&mT<=1){
+                var mpt=bezierPt(mT);
                 moonEl.setAttribute("cx",mpt.x);
                 moonEl.setAttribute("cy",mpt.y);
                 moonEl.setAttribute("display","");
@@ -292,7 +308,7 @@
     function fetchWeather(){
         var url="https://api.open-meteo.com/v1/forecast?latitude=47.3587&longitude=8.4387"
             +"&hourly=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation_probability"
-            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,moonrise,moonset"
+            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max"
             +"&timezone=Europe%2FZurich&past_days=1&forecast_days=3&current_weather=true";
         var xhr=new XMLHttpRequest();
         xhr.open("GET",url,true);
@@ -314,13 +330,6 @@
             }
             solarData.sort(function(a,b){return a.date-b.date});
 
-            moonData={rise:null,set:null};
-            if(d.daily.moonrise&&d.daily.moonrise[1]){
-                moonData.rise=parseISODate(d.daily.moonrise[1]);
-            }
-            if(d.daily.moonset&&d.daily.moonset[1]){
-                moonData.set=parseISODate(d.daily.moonset[1]);
-            }
             updateClock();
         }
 
