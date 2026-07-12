@@ -49,7 +49,7 @@
         .wx-widget{padding:10px}
         .wx-title{font-size:10px;color:#8e8e93;font-weight:700;text-transform:uppercase;margin-bottom:6px;letter-spacing:1px}
         .wx-grid{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-webkit-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:8px}
-        .wx-stat{text-align:center;width:24%}
+        .wx-stat{text-align:center;width:19%}
         .wx-stat-icon{font-size:16px}
         .wx-stat-val{font-size:13px;font-weight:700}
         .wx-stat-lbl{font-size:9px;color:#8e8e93}
@@ -58,10 +58,12 @@
         .wx-h-time{font-size:10px;color:#8e8e93}
         .wx-h-icon{font-size:16px;margin:2px 0}
         .wx-h-temp{font-size:12px;font-weight:700}
+        .wx-h-prec{font-size:10px;color:#5ac8fa}
         .wx-daily-item{display:-webkit-flex;display:-webkit-box;display:flex;-webkit-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;align-items:center;padding:3px 0;font-size:12px}
         .wx-d-day{width:30%;font-weight:700}
-        .wx-d-icon{width:30%;text-align:center;font-size:16px}
-        .wx-d-temp{text-align:right;width:40%}
+        .wx-d-icon{width:25%;text-align:center;font-size:16px}
+        .wx-d-prec{width:15%;text-align:center;font-size:11px;color:#5ac8fa}
+        .wx-d-temp{text-align:right;width:30%}
         .wx-max{color:#ff453a}
         .wx-min{color:#0a84ff;margin-left:6px}
 
@@ -140,7 +142,7 @@
     <div class="col-right">
         <div class="card dep-widget">
             <div class="dep-header">
-                <span class="dep-header-title">SALIDAS → ZÜRICH</span>
+                <span class="dep-header-title">SALIDAS → ZÜRICH / SCHLIEREN</span>
                 <span class="dep-header-sub" id="dep-sub">Birmensdorf ZH & Zentrum</span>
             </div>
             <div class="dep-list" id="dep-list"><span class="loading">Cargando salidas...</span></div>
@@ -185,10 +187,10 @@
             if(!pastEvt)pastEvt=solarData[0];
 
             document.getElementById("icon-past").innerHTML=pastEvt.type==="sunrise"?"🌅":"🌇";
-            document.getElementById("lbl-past").innerHTML=pastEvt.type==="sunrise"?"Amanecer":"Ocaso";
+            document.getElementById("lbl-past").innerHTML=pastEvt.type==="sunrise"?"Amanecer":"Anochecer";
             document.getElementById("time-past").innerHTML=fmt24h(pastEvt.date);
             document.getElementById("icon-next").innerHTML=nextEvt.type==="sunrise"?"🌅":"🌇";
-            document.getElementById("lbl-next").innerHTML=nextEvt.type==="sunrise"?"Amanecer":"Ocaso";
+            document.getElementById("lbl-next").innerHTML=nextEvt.type==="sunrise"?"Amanecer":"Anochecer";
             document.getElementById("time-next").innerHTML=fmt24h(nextEvt.date);
         }
     }
@@ -234,7 +236,7 @@
     function fetchWeather(){
         var url="https://api.open-meteo.com/v1/forecast?latitude=47.3587&longitude=8.4387"
             +"&hourly=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation_probability"
-            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
+            +"&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max"
             +"&timezone=Europe%2FZurich&past_days=1&forecast_days=3&current_weather=true";
         var xhr=new XMLHttpRequest();
         xhr.open("GET",url,true);
@@ -276,12 +278,13 @@
             html+="<div class='wx-stat'><div class='wx-stat-icon'>🤔</div><div class='wx-stat-val'>"+Math.round(h.apparent_temperature[idx])+"°C</div><div class='wx-stat-lbl'>Sensación</div></div>";
             html+="<div class='wx-stat'><div class='wx-stat-icon'>💧</div><div class='wx-stat-val'>"+h.relative_humidity_2m[idx]+"%</div><div class='wx-stat-lbl'>Humedad</div></div>";
             html+="<div class='wx-stat'><div class='wx-stat-icon'>💨</div><div class='wx-stat-val'>"+Math.round(h.wind_speed_10m[idx])+" km/h</div><div class='wx-stat-lbl'>Viento</div></div>";
+            html+="<div class='wx-stat'><div class='wx-stat-icon'>🌧️</div><div class='wx-stat-val'>"+(h.precipitation_probability[idx]||0)+"%</div><div class='wx-stat-lbl'>Lluvia</div></div>";
             document.getElementById("wx-current").innerHTML=html;
         }
 
         /* Hourly next 5h */
         if(d.hourly){
-            var times=d.hourly.time, temps=d.hourly.temperature_2m, codes=d.hourly.weather_code;
+            var times=d.hourly.time, temps=d.hourly.temperature_2m, codes=d.hourly.weather_code, precProb=d.hourly.precipitation_probability;
             var now=new Date(), nowH=now.getHours(), startIdx=-1;
             var todayStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(nowH);
             for(var i=0;i<times.length;i++){
@@ -293,7 +296,8 @@
                 var k=startIdx+j;
                 if(k<times.length){
                     var tStr=times[k].split("T")[1];
-                    h+="<div class='wx-h'><div class='wx-h-time'>"+tStr+"</div><div class='wx-h-icon'>"+(WMO[codes[k]]||"☁️")+"</div><div class='wx-h-temp'>"+Math.round(temps[k])+"°</div></div>";
+                    var pVal=(precProb&&precProb[k]!=null)?precProb[k]:0;
+                    h+="<div class='wx-h'><div class='wx-h-time'>"+tStr+"</div><div class='wx-h-icon'>"+(WMO[codes[k]]||"☁️")+"</div><div class='wx-h-prec'>🌧️"+pVal+"%</div><div class='wx-h-temp'>"+Math.round(temps[k])+"°</div></div>";
                 }
             }
             document.getElementById("wx-hourly").innerHTML=h;
@@ -306,7 +310,8 @@
             for(var i=0;i<3&&i<d.daily.time.length;i++){
                 var dt=new Date(d.daily.time[i]+"T12:00:00");
                 var dn=i===0?"Hoy":i===1?"Mañana":weekdays[dt.getDay()];
-                h+="<div class='wx-daily-item'><div class='wx-d-day'>"+dn+"</div><div class='wx-d-icon'>"+(WMO[d.daily.weather_code[i]]||"☁️")+"</div><div class='wx-d-temp'><span class='wx-max'>"+Math.round(d.daily.temperature_2m_max[i])+"°</span><span class='wx-min'>"+Math.round(d.daily.temperature_2m_min[i])+"°</span></div></div>";
+                var pMax=(d.daily.precipitation_probability_max&&d.daily.precipitation_probability_max[i]!=null)?d.daily.precipitation_probability_max[i]:0;
+                h+="<div class='wx-daily-item'><div class='wx-d-day'>"+dn+"</div><div class='wx-d-icon'>"+(WMO[d.daily.weather_code[i]]||"☁️")+"</div><div class='wx-d-prec'>🌧️"+pMax+"%</div><div class='wx-d-temp'><span class='wx-max'>"+Math.round(d.daily.temperature_2m_max[i])+"°</span><span class='wx-min'>"+Math.round(d.daily.temperature_2m_min[i])+"°</span></div></div>";
             }
             document.getElementById("wx-daily").innerHTML=h;
         }
@@ -314,14 +319,14 @@
     fetchWeather();
 
     /* ================= TRANSPORT ================= */
-    function goesToZurich(conn){
+    function shouldShowConnection(conn){
         if(!conn.to)return false;
         var dest=conn.to.toLowerCase();
-        if(dest.indexOf("zürich")!==-1||dest.indexOf("zurich")!==-1)return true;
+        if(dest.indexOf("zürich")!==-1||dest.indexOf("zurich")!==-1||dest.indexOf("schlieren")!==-1)return true;
         if(conn.passList){
             for(var i=0;i<conn.passList.length;i++){
                 var sn=(conn.passList[i].station.name||"").toLowerCase();
-                if(sn.indexOf("zürich")!==-1||sn.indexOf("zurich")!==-1)return true;
+                if(sn.indexOf("zürich")!==-1||sn.indexOf("zurich")!==-1||sn.indexOf("schlieren")!==-1)return true;
             }
         }
         return false;
@@ -361,13 +366,13 @@
         var merged=[],i;
         for(i=0;i<depResults.train.length;i++){
             var c=depResults.train[i];
-            if(goesToZurich(c)){
+            if(shouldShowConnection(c)){
                 merged.push({type:"train",name:c.category+(c.number||""),to:c.to,sDep:c.stop.departure,ts:c.stop.departureTimestamp,delay:c.stop.delay,from:"Estación Tren"});
             }
         }
         for(i=0;i<depResults.bus.length;i++){
             var b=depResults.bus[i];
-            if(goesToZurich(b)){
+            if(shouldShowConnection(b)){
                 merged.push({type:"bus",name:"Bus "+b.number,to:b.to,sDep:b.stop.departure,ts:b.stop.departureTimestamp,delay:b.stop.delay,from:"Zentrum (Bus)"});
             }
         }
@@ -393,7 +398,7 @@
             if(delayMins>0){html+=" <span class='dep-delay'>+"+delayMins+"</span>";alertCount++}
             html+=")</span></div></div>";
         }
-        document.getElementById("dep-list").innerHTML=html||"<span class='loading'>No hay salidas hacia Zúrich</span>";
+        document.getElementById("dep-list").innerHTML=html||"<span class='loading'>No hay salidas hacia Zúrich/Schlieren</span>";
 
         /* Alerts */
         var alertEl=document.getElementById("dep-alerts");
@@ -406,7 +411,7 @@
         }
 
         var now=new Date();
-        document.getElementById("dep-sub").innerHTML="Act: "+pad(now.getHours())+":"+pad(now.getMinutes())+" (Birmensdorf ZH & Zentrum)";
+        document.getElementById("dep-sub").innerHTML="Act: "+pad(now.getHours())+":"+pad(now.getMinutes())+" → Zürich & Schlieren";
     }
 
     function format24hISO(iso){
@@ -422,11 +427,12 @@
     /* ================= NEWS ================= */
     var newsItems=[];
     var newsIdx=0;
+    var newsRotationInterval=null;
 
     function fetchNews(){
         newsItems=[];
         var feeds=[
-            {url:"https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",badge:"España",cls:"badge-nacional"},
+            {url:"https://www.20minutos.es/rss/",badge:"España",cls:"badge-nacional"},
             {url:"https://www.rtve.es/rss/deportes.xml",badge:"Deportes",cls:"badge-deportes"},
             {url:"https://e00-marca.uecdn.es/rss/portada.xml",badge:"Deportes",cls:"badge-deportes"}
         ];
@@ -460,8 +466,10 @@
 
     function startNewsRotation(){
         if(newsItems.length===0)return;
+        if(newsRotationInterval)clearInterval(newsRotationInterval);
+        newsIdx=0;
         rotateNews();
-        setInterval(rotateNews,8000);
+        newsRotationInterval=setInterval(rotateNews,10000);
     }
 
     function rotateNews(){
